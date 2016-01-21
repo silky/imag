@@ -18,3 +18,5 @@ By definition, the Library depends on the libstore (@sec:libstore).
 A module MUST use the runtime library to implement the commandline
 interface as defined in @sec:librt.
 
+The following sections describe the functionality of the modules.
+
