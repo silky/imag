@@ -1,0 +1,6 @@
+<!--
+
+## Diary {#sec:modules:diary}
+
+-->
+
