@@ -12,6 +12,7 @@ use std::convert::Into;
 
 use toml::{Table, Value};
 use regex::Regex;
+use git2::Repository;
 
 use error::{ParserErrorKind, ParserError};
 use error::{StoreError, StoreErrorKind};
@@ -88,6 +89,9 @@ impl StoreEntry {
 
 /// The Store itself, through this object one can interact with IMAG's entries
 pub struct Store {
+    /// git repository object for the store
+    repo: Repository,
+
     location: PathBuf,
 
     /**
@@ -115,6 +119,13 @@ impl Store {
                 return Err(StoreError::new(StoreErrorKind::StorePathCreate,
                                            Some(Box::new(c.err().unwrap()))));
             }
+
+            let repo = Repository::init(location.clone());
+            if repo.is_err() {
+                return Err(StoreError::new(StoreErrorKind::GitError,
+                                           Some(Box::new(repo.err().unwrap()))));
+            }
+            // Do not use the repo now, we open it below... I know, this is a dirty hack.
         } else {
             if location.is_file() {
                 debug!("Store path exists as file");
@@ -122,8 +133,15 @@ impl Store {
             }
         }
 
+        let repo = Repository::open(location.clone());
+        if repo.is_err() {
+            return Err(StoreError::new(StoreErrorKind::GitError,
+                                       Some(Box::new(repo.err().unwrap()))));
+        }
+
         debug!("Store building succeeded");
         Ok(Store {
+            repo: repo.unwrap(),
             location: location,
             entries: Arc::new(RwLock::new(HashMap::new())),
         })
