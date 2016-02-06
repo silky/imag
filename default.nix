@@ -5,6 +5,10 @@ let
     rustc
     cargo
     pkgs.llvmPackages.lldb
+    pkgs.libgit2
+    pkgs.libssh2
+    pkgs.openssl
+    pkgs.pkgconfig
   ];
 in
 

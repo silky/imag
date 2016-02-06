@@ -1,6 +1,7 @@
 #[macro_use] extern crate log;
 #[macro_use] extern crate version;
 extern crate fs2;
+extern crate git2;
 extern crate glob;
 extern crate regex;
 extern crate toml;
