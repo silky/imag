@@ -79,6 +79,7 @@ addons:
             - libgit2
             - libssh2
             - openssl
+            - pkgconfig
             - tree
 
 after_success:
