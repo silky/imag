@@ -74,8 +74,11 @@ addons:
     apt:
         packages:
             - libcurl4-openssl-dev
-            - libelf-dev
             - libdw-dev
+            - libelf-dev
+            - libgit2
+            - libssh2
+            - openssl
             - tree
 
 after_success:
