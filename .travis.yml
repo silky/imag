@@ -73,6 +73,7 @@ script:
 addons:
     apt:
         packages:
+            - cmake
             - libcurl4-openssl-dev
             - libdw-dev
             - libelf-dev
@@ -81,6 +82,8 @@ addons:
             - openssl
             - pkgconfig
             - tree
+        sources:
+            - kalakris-cmake
 
 after_success:
     - travis-cargo --only stable doc-upload
