@@ -2,6 +2,14 @@ use crossbeam;
 
 use libimagstore::store::Entry;
 
+use asciidoc::check::is_asciidoc;
+use bbcode::check::is_bbcode;
+use commonmark::check::is_commonmark;
+use latex::check::is_latex;
+use markdown::check::is_markdown;
+use restructuredtext::check::is_restructuredtext;
+use textile::check::is_textile;
+
 pub fn is_parsable(e: &Entry) -> bool {
     crossbeam::scope(|sc| {
         let is_markdown         = sc.spawn(|| is_markdown(e));
@@ -20,39 +28,5 @@ pub fn is_parsable(e: &Entry) -> bool {
         is_asciidoc.join()         ||
         is_bbcode.join()
     })
-}
-
-pub fn is_markdown(e: &Entry) -> bool {
-    use hoedown::Html;
-    use hoedown::Markdown;
-    use hoedown::renderer::html::Flags;
-    use hoedown::renderer::Render;
-
-    let md = Markdown::new(&e.get_content()[..]);
-    Html::new(Flags::empty(), 0).render(&md).to_str().is_ok()
-}
-
-pub fn is_commonmark(e: &Entry) -> bool {
-    false
-}
-
-pub fn is_textile(e: &Entry) -> bool {
-    false
-}
-
-pub fn is_latex(e: &Entry) -> bool {
-    false
-}
-
-pub fn is_restructuredtext(e: &Entry) -> bool {
-    false
-}
-
-pub fn is_asciidoc(e: &Entry) -> bool {
-    false
-}
-
-pub fn is_bbcode(e: &Entry) -> bool {
-    false
 }
 
