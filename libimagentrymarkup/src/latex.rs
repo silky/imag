@@ -5,14 +5,11 @@ use libimagstore::store::Entry;
 use markup::{IntoHtml, LinkExtractor, IsMarkupChecker, MarkupProcessor, Link, HTML};
 use result::Result;
 
-pub mod link;
-pub mod check;
-
-struct BBCode {
+pub struct Latex {
     entry_content: String,
 }
 
-impl IntoHtml for BBCode {
+impl IntoHtml for Latex {
 
     fn into_html(self) -> Result<HTML> {
         unimplemented!()
@@ -24,7 +21,7 @@ impl IntoHtml for BBCode {
 
 }
 
-impl LinkExtractor for BBCode {
+impl LinkExtractor for Latex {
 
     fn links(&self) -> Vec<Link> {
         unimplemented!()
@@ -40,7 +37,7 @@ impl LinkExtractor for BBCode {
 
 }
 
-impl IsMarkupChecker for BBCode {
+impl IsMarkupChecker for Latex {
 
     fn is_markup(e: &Entry) -> bool {
         unimplemented!()
@@ -48,9 +45,9 @@ impl IsMarkupChecker for BBCode {
 
 }
 
-impl MarkupProcessor for BBCode {
+impl MarkupProcessor for Latex {
 
-    fn for_entry(e: &Entry) -> Result<BBCode> {
+    fn for_entry(e: &Entry) -> Result<Latex> {
         unimplemented!()
     }
 

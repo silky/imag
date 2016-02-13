@@ -5,14 +5,11 @@ use libimagstore::store::Entry;
 use markup::{IntoHtml, LinkExtractor, IsMarkupChecker, MarkupProcessor, Link, HTML};
 use result::Result;
 
-pub mod link;
-pub mod check;
-
-struct Markdown {
+pub struct AsciiDoc {
     entry_content: String,
 }
 
-impl IntoHtml for Markdown {
+impl IntoHtml for AsciiDoc {
 
     fn into_html(self) -> Result<HTML> {
         unimplemented!()
@@ -24,7 +21,7 @@ impl IntoHtml for Markdown {
 
 }
 
-impl LinkExtractor for Markdown {
+impl LinkExtractor for AsciiDoc {
 
     fn links(&self) -> Vec<Link> {
         unimplemented!()
@@ -40,7 +37,7 @@ impl LinkExtractor for Markdown {
 
 }
 
-impl IsMarkupChecker for Markdown {
+impl IsMarkupChecker for AsciiDoc {
 
     fn is_markup(e: &Entry) -> bool {
         unimplemented!()
@@ -48,9 +45,9 @@ impl IsMarkupChecker for Markdown {
 
 }
 
-impl MarkupProcessor for Markdown {
+impl MarkupProcessor for AsciiDoc {
 
-    fn for_entry(e: &Entry) -> Result<Markdown> {
+    fn for_entry(e: &Entry) -> Result<AsciiDoc> {
         unimplemented!()
     }
 

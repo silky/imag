@@ -5,14 +5,11 @@ use libimagstore::store::Entry;
 use markup::{IntoHtml, LinkExtractor, IsMarkupChecker, MarkupProcessor, Link, HTML};
 use result::Result;
 
-pub mod link;
-pub mod check;
-
-struct RestructuredText {
+pub struct BBCode {
     entry_content: String,
 }
 
-impl IntoHtml for RestructuredText {
+impl IntoHtml for BBCode {
 
     fn into_html(self) -> Result<HTML> {
         unimplemented!()
@@ -24,7 +21,7 @@ impl IntoHtml for RestructuredText {
 
 }
 
-impl LinkExtractor for RestructuredText {
+impl LinkExtractor for BBCode {
 
     fn links(&self) -> Vec<Link> {
         unimplemented!()
@@ -40,7 +37,7 @@ impl LinkExtractor for RestructuredText {
 
 }
 
-impl IsMarkupChecker for RestructuredText {
+impl IsMarkupChecker for BBCode {
 
     fn is_markup(e: &Entry) -> bool {
         unimplemented!()
@@ -48,9 +45,9 @@ impl IsMarkupChecker for RestructuredText {
 
 }
 
-impl MarkupProcessor for RestructuredText {
+impl MarkupProcessor for BBCode {
 
-    fn for_entry(e: &Entry) -> Result<RestructuredText> {
+    fn for_entry(e: &Entry) -> Result<BBCode> {
         unimplemented!()
     }
 

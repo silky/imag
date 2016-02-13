@@ -2,23 +2,25 @@ use crossbeam;
 
 use libimagstore::store::Entry;
 
-use asciidoc::check::is_asciidoc;
-use bbcode::check::is_bbcode;
-use commonmark::check::is_commonmark;
-use latex::check::is_latex;
-use markdown::check::is_markdown;
-use restructuredtext::check::is_restructuredtext;
-use textile::check::is_textile;
+use asciidoc::AsciiDoc;
+use bbcode::BBCode;
+use commonmark::CommonMark;
+use latex::Latex;
+use markdown::Markdown;
+use restructuredtext::RestructuredText;
+use textile::Textile;
+
+use markup::IsMarkupChecker;
 
 pub fn is_parsable(e: &Entry) -> bool {
     crossbeam::scope(|sc| {
-        let is_markdown         = sc.spawn(|| is_markdown(e));
-        let is_commonmark       = sc.spawn(|| is_commonmark(e));
-        let is_textile          = sc.spawn(|| is_textile(e));
-        let is_latex            = sc.spawn(|| is_latex(e));
-        let is_restructuredtext = sc.spawn(|| is_restructuredtext(e));
-        let is_asciidoc         = sc.spawn(|| is_asciidoc(e));
-        let is_bbcode           = sc.spawn(|| is_bbcode(e));
+        let is_markdown         = sc.spawn(|| Markdown::is_markup(e));
+        let is_commonmark       = sc.spawn(|| CommonMark::is_markup(e));
+        let is_textile          = sc.spawn(|| Textile::is_markup(e));
+        let is_latex            = sc.spawn(|| Latex::is_markup(e));
+        let is_restructuredtext = sc.spawn(|| RestructuredText::is_markup(e));
+        let is_asciidoc         = sc.spawn(|| AsciiDoc::is_markup(e));
+        let is_bbcode           = sc.spawn(|| BBCode::is_markup(e));
 
         is_markdown.join()         ||
         is_commonmark.join()       ||

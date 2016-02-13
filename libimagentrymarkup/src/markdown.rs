@@ -5,14 +5,11 @@ use libimagstore::store::Entry;
 use markup::{IntoHtml, LinkExtractor, IsMarkupChecker, MarkupProcessor, Link, HTML};
 use result::Result;
 
-pub mod link;
-pub mod check;
-
-struct Latex {
+pub struct Markdown {
     entry_content: String,
 }
 
-impl IntoHtml for Latex {
+impl IntoHtml for Markdown {
 
     fn into_html(self) -> Result<HTML> {
         unimplemented!()
@@ -24,7 +21,7 @@ impl IntoHtml for Latex {
 
 }
 
-impl LinkExtractor for Latex {
+impl LinkExtractor for Markdown {
 
     fn links(&self) -> Vec<Link> {
         unimplemented!()
@@ -40,7 +37,7 @@ impl LinkExtractor for Latex {
 
 }
 
-impl IsMarkupChecker for Latex {
+impl IsMarkupChecker for Markdown {
 
     fn is_markup(e: &Entry) -> bool {
         unimplemented!()
@@ -48,9 +45,9 @@ impl IsMarkupChecker for Latex {
 
 }
 
-impl MarkupProcessor for Latex {
+impl MarkupProcessor for Markdown {
 
-    fn for_entry(e: &Entry) -> Result<Latex> {
+    fn for_entry(e: &Entry) -> Result<Markdown> {
         unimplemented!()
     }
 

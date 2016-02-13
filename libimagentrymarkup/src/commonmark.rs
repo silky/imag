@@ -5,10 +5,7 @@ use libimagstore::store::Entry;
 use markup::{IntoHtml, LinkExtractor, IsMarkupChecker, MarkupProcessor, Link, HTML};
 use result::Result;
 
-pub mod link;
-pub mod check;
-
-struct CommonMark {
+pub struct CommonMark {
     entry_content: String,
 }
 
