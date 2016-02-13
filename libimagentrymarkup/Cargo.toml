@@ -1,0 +1,14 @@
+[package]
+name = "libimagentrymarkup"
+version = "0.1.0"
+authors = ["Matthias Beyer <mail@beyermatthias.de>"]
+
+[dependencies]
+crossbeam = "0.2.8"
+markdown = "0.1.1"
+hoedown = "3.0.3"
+pulldown-cmark = "0.0.5"
+
+[dependencies.libimagstore]
+path = "../libimagstore"
+
