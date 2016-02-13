@@ -7,7 +7,7 @@ extern crate libimagstore;
 
 pub mod check;
 pub mod error;
-pub mod html;
+pub mod markup;
 pub mod result;
 
 pub mod asciidoc;
