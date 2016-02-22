@@ -9,6 +9,7 @@ config = "0.1.3"
 log = "0.3.4"
 xdg-basedir = "0.2.2"
 itertools = "0.4.6"
+term = "0.4.4"
 
 [dependencies.libimagstore]
 path = "../libimagstore"
