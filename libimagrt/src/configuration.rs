@@ -4,6 +4,7 @@ use std::result::Result as RResult;
 
 pub use config::types::Config;
 pub use config::reader::from_file;
+pub use term::color::*;
 
 /**
  * Errors which are related to configuration-file loading
@@ -21,6 +22,7 @@ pub mod error {
         ConfigNotFound,
         ConfigParsingFailed,
         NoConfigFileFound,
+        ColorNameError,
     }
 
     /**
@@ -59,6 +61,7 @@ pub mod error {
                 ConfigErrorKind::ConfigNotFound      => "Config not found",
                 ConfigErrorKind::ConfigParsingFailed => "Config parsing failed",
                 ConfigErrorKind::NoConfigFileFound   => "No config file found",
+                ConfigErrorKind::ColorNameError      => "Color Name error",
             }
         }
 
@@ -118,6 +121,27 @@ pub struct Configuration {
      * The options the editor should get when opening some file
      */
     editor_opts: String,
+
+    /**
+     * Debug output color
+     */
+    debug_color: Color,
+
+    /**
+     * Info output color
+     */
+    info_color: Color,
+
+    /**
+     * Warning output color
+     */
+    warn_color: Color,
+
+    /**
+     * Error output color
+     */
+    error_color: Color,
+
 }
 
 impl Configuration {
@@ -132,24 +156,86 @@ impl Configuration {
      * If that doesn't work either, an error is returned.
      */
     pub fn new(rtp: &PathBuf) -> Result<Configuration> {
-        fetch_config(&rtp).map(|cfg| {
-            let verbosity   = cfg.lookup_boolean("verbosity").unwrap_or(false);
-            let editor      = cfg.lookup_str("editor").map(String::from);
-            let editor_opts = String::from(cfg.lookup_str("editor-opts").unwrap_or(""));
+        let cfg = fetch_config(&rtp);
+        if cfg.is_err() {
+            return Err(cfg.err().unwrap());
+        }
+        let cfg = cfg.unwrap();
 
-            debug!("Building configuration");
-            debug!("  - verbosity  : {:?}", verbosity);
-            debug!("  - editor     : {:?}", editor);
-            debug!("  - editor-opts: {}", editor_opts);
+        let verbosity   = cfg.lookup_boolean("verbosity").unwrap_or(false);
+        let editor      = cfg.lookup_str("editor").map(String::from);
+        let editor_opts = String::from(cfg.lookup_str("editor-opts").unwrap_or(""));
+        let debug_color = cfg.lookup_str("debug_color").unwrap_or("YELLOW");
+        let info_color  = cfg.lookup_str("info_color").unwrap_or("CYAN");
+        let warn_color  = cfg.lookup_str("wanr_color").unwrap_or("RED");
+        let error_color = cfg.lookup_str("error_color").unwrap_or("BRIGHT_RED");
 
-            Configuration {
-                verbosity: verbosity,
-                editor: editor,
-                editor_opts: editor_opts,
-            }
+        debug!("Building configuration");
+        debug!("  - verbosity  : {:?}", verbosity);
+        debug!("  - editor     : {:?}", editor);
+        debug!("  - editor-opts: {}", editor_opts);
+        debug!("  - debug_color: {}", debug_color);
+        debug!("  - info_color : {}", info_color);
+        debug!("  - warn_color : {}", warn_color);
+        debug!("  - error_color: {}", error_color);
+
+        let debug_color = build_color(debug_color);
+        if debug_color.is_none() {
+            return Err(ConfigError::new(ConfigErrorKind::ColorNameError, None));
+        }
+        let debug_color = debug_color.unwrap();
+
+        let info_color = build_color(info_color);
+        if info_color.is_none() {
+            return Err(ConfigError::new(ConfigErrorKind::ColorNameError, None));
+        }
+        let info_color = info_color.unwrap();
+
+        let warn_color = build_color(warn_color);
+        if warn_color.is_none() {
+            return Err(ConfigError::new(ConfigErrorKind::ColorNameError, None));
+        }
+        let warn_color = warn_color.unwrap();
+
+        let error_color = build_color(error_color);
+        if error_color.is_none() {
+            return Err(ConfigError::new(ConfigErrorKind::ColorNameError, None));
+        }
+        let error_color = error_color.unwrap();
+
+        Ok(Configuration {
+            verbosity: verbosity,
+            editor: editor,
+            editor_opts: editor_opts,
+            debug_color: debug_color,
+            info_color:  info_color,
+            warn_color:  warn_color,
+            error_color: error_color,
         })
     }
 
+}
+
+fn build_color(s: &str) -> Option<Color> {
+    match &s.to_lowercase()[..] {
+        "black"          => Some(BLACK),
+        "blue"           => Some(BLUE),
+        "bright_black"   => Some(BRIGHT_BLACK),
+        "bright_blue"    => Some(BRIGHT_BLUE),
+        "bright_cyan"    => Some(BRIGHT_CYAN),
+        "bright_green"   => Some(BRIGHT_GREEN),
+        "bright_magenta" => Some(BRIGHT_MAGENTA),
+        "bright_red"     => Some(BRIGHT_RED),
+        "bright_white"   => Some(BRIGHT_WHITE),
+        "bright_yellow"  => Some(BRIGHT_YELLOW),
+        "cyan"           => Some(CYAN),
+        "green"          => Some(GREEN),
+        "magenta"        => Some(MAGENTA),
+        "red"            => Some(RED),
+        "white"          => Some(WHITE),
+        "yellow"         => Some(YELLOW),
+        _                => None,
+    }
 }
 
 /**
@@ -205,6 +291,10 @@ impl Default for Configuration {
             verbosity: false,
             editor: Some(String::from("nano")),
             editor_opts: String::from(""),
+            debug_color : build_color("YELLOW").unwrap(),
+            info_color  : build_color("CYAN").unwrap(),
+            warn_color  : build_color("RED").unwrap(),
+            error_color : build_color("BRIGHT_RED").unwrap(),
         }
     }
 
