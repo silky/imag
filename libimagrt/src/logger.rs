@@ -40,8 +40,22 @@ impl Log for ImagLogger {
 
     fn log(&self, record: &LogRecord) {
         if self.enabled(record.metadata()) {
-            // TODO: This is just simple logging. Maybe we can enhance this lateron
-            writeln!(stderr(), "[imag][{: <5}]: {}", record.level(), record.args());
+            let mut term = stderr().unwrap();
+            let fg = match record.level() {
+                LogLevel::Trace => self.error_color,
+                LogLevel::Error => self.error_color,
+                LogLevel::Warn  => self.warn_color,
+                LogLevel::Info  => self.info_color,
+                LogLevel::Debug => self.debug_color,
+            };
+            term.fg(fg).unwrap();
+            write!(term, "[imag][{: <5}]: ", record.level());
+
+            if record.level() != LogLevel::Trace && record.level() != LogLevel::Error {
+                term.fg(WHITE).unwrap();
+            }
+
+            writeln!(term, "{}", record.args());
         }
     }
 }
