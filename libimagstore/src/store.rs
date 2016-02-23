@@ -505,14 +505,14 @@ impl EntryHeader {
             return Err(tokens.err().unwrap());
         }
         let tokens = tokens.unwrap();
-        debug!("tokens = {:?}", tokens);
+        trace!("tokens = {:?}", tokens);
 
         let destination = tokens.iter().last();
         if destination.is_none() {
             return Err(StoreError::new(StoreErrorKind::HeaderPathSyntaxError, None));
         }
         let destination = destination.unwrap();
-        debug!("destination = {:?}", destination);
+        trace!("destination = {:?}", destination);
 
         let path_to_dest = tokens[..(tokens.len() - 1)].into(); // N - 1 tokens
         let mut value = EntryHeader::walk_header(&mut self.header, path_to_dest); // walk N-1 tokens
@@ -520,7 +520,7 @@ impl EntryHeader {
             return Err(value.err().unwrap());
         }
         let mut value = value.unwrap();
-        debug!("walked value = {:?}", value);
+        trace!("walked value = {:?}", value);
 
         match destination {
             &Token::Key(ref s) => { // if the destination shall be an map key->value
@@ -529,7 +529,7 @@ impl EntryHeader {
                      * Put it in there if we have a map
                      */
                     &mut Value::Table(ref mut t) => {
-                        debug!("Matched Key->Table");
+                        trace!("Matched Key->Table");
                         return Ok(t.insert(s.clone(), v));
                     }
 
@@ -537,7 +537,7 @@ impl EntryHeader {
                      * Fail if there is no map here
                      */
                     _ => {
-                        debug!("Matched Key->NON-Table");
+                        trace!("Matched Key->NON-Table");
                         return Err(StoreError::new(StoreErrorKind::HeaderPathTypeFailure, None));
                     }
                 }
@@ -550,17 +550,17 @@ impl EntryHeader {
                      * Put it in there if we have an array
                      */
                     &mut Value::Array(ref mut a) => {
-                        debug!("Matched Index->Array");
+                        trace!("Matched Index->Array");
                         a.push(v); // push to the end of the array
 
                         // if the index is inside the array, we swap-remove the element at this
                         // index
                         if a.len() > i {
-                            debug!("Swap-Removing in Array {:?}[{:?}] <- {:?}", a, i, a[a.len()-1]);
+                            trace!("Swap-Removing in Array {:?}[{:?}] <- {:?}", a, i, a[a.len()-1]);
                             return Ok(Some(a.swap_remove(i)));
                         }
 
-                        debug!("Appended");
+                        trace!("Appended");
                         return Ok(None);
                     },
 
@@ -568,7 +568,7 @@ impl EntryHeader {
                      * Fail if there is no array here
                      */
                     _ => {
-                        debug!("Matched Index->NON-Array");
+                        trace!("Matched Index->NON-Array");
                         return Err(StoreError::new(StoreErrorKind::HeaderPathTypeFailure, None));
                     },
                 }
@@ -639,7 +639,7 @@ impl EntryHeader {
             return Err(StoreError::new(StoreErrorKind::HeaderPathSyntaxError, None));
         }
         let destination = destination.unwrap();
-        debug!("destination = {:?}", destination);
+        trace!("destination = {:?}", destination);
 
         let path_to_dest = tokens[..(tokens.len() - 1)].into(); // N - 1 tokens
         let mut value = EntryHeader::walk_header(&mut self.header, path_to_dest); // walk N-1 tokens
@@ -647,17 +647,17 @@ impl EntryHeader {
             return Err(value.err().unwrap());
         }
         let mut value = value.unwrap();
-        debug!("walked value = {:?}", value);
+        trace!("walked value = {:?}", value);
 
         match destination {
             &Token::Key(ref s) => { // if the destination shall be an map key->value
                 match value {
                     &mut Value::Table(ref mut t) => {
-                        debug!("Matched Key->Table, removing {:?}", s);
+                        trace!("Matched Key->Table, removing {:?}", s);
                         return Ok(t.remove(s));
                     },
                     _ => {
-                        debug!("Matched Key->NON-Table");
+                        trace!("Matched Key->NON-Table");
                         return Err(StoreError::new(StoreErrorKind::HeaderPathTypeFailure, None));
                     }
                 }
@@ -669,14 +669,14 @@ impl EntryHeader {
                         // if the index is inside the array, we swap-remove the element at this
                         // index
                         if a.len() > i {
-                            debug!("Removing in Array {:?}[{:?}]", a, i);
+                            trace!("Removing in Array {:?}[{:?}]", a, i);
                             return Ok(Some(a.remove(i)));
                         } else {
                             return Ok(None);
                         }
                     },
                     _ => {
-                        debug!("Matched Index->NON-Array");
+                        trace!("Matched Index->NON-Array");
                         return Err(StoreError::new(StoreErrorKind::HeaderPathTypeFailure, None));
                     },
                 }
