@@ -135,7 +135,11 @@ impl<'a> Runtime<'a> {
         log::set_logger(|max_log_lvl| {
             max_log_lvl.set(lvl);
             debug!("Init logger with {}", lvl);
-            Box::new(ImagLogger::new(lvl.to_log_level().unwrap()))
+            Box::new(ImagLogger::new(lvl.to_log_level().unwrap(),
+                                     self.configuration.debug_color(),
+                                     self.configuration.info_color(),
+                                     self.configuration.warn_color(),
+                                     self.configuration.error_color()))
         })
         .map_err(|_| {
             panic!("Could not setup logger");

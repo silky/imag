@@ -1,17 +1,32 @@
 use std::io::Write;
-use std::io::stderr;
 
 use log::{Log, LogLevel, LogRecord, LogMetadata};
 
+use term::color::*;
+use term::stderr;
+use term::StderrTerminal;
+
 pub struct ImagLogger {
     lvl: LogLevel,
+    debug_color: Color,
+    info_color:  Color,
+    warn_color:  Color,
+    error_color: Color,
 }
 
 impl ImagLogger {
 
-    pub fn new(lvl: LogLevel) -> ImagLogger {
+    pub fn new(lvl: LogLevel,
+               debug_color: Color,
+               info_color:  Color,
+               warn_color:  Color,
+               error_color: Color) -> ImagLogger {
         ImagLogger {
             lvl: lvl,
+            debug_color: debug_color,
+            info_color:  info_color,
+            warn_color:  warn_color,
+            error_color: error_color,
         }
     }
 
