@@ -73,7 +73,7 @@ fn create_from_cli_spec(rt: &Runtime, matches: &ArgMatches, path: &PathBuf) -> R
                 .unwrap_or(String::new())
         });
 
-    debug!("Got content with len = {}", content.len());
+    trace!("Got content with len = {}", content.len());
 
     let header = matches.subcommand_matches("entry")
         .map(|entry_matches| build_toml_header(entry_matches, EntryHeader::new()))
@@ -92,7 +92,7 @@ fn create_from_source(rt: &Runtime, matches: &ArgMatches, path: &PathBuf) -> Res
         return content.map(|_| ());
     }
     let content = content.unwrap();
-    debug!("Content with len = {}", content.len());
+    trace!("Content with len = {}", content.len());
 
     Entry::from_str(path.clone(), &content[..])
         .map(|mut new_e| {
@@ -119,12 +119,12 @@ fn create_with_content_and_header(rt: &Runtime,
             {
                 let mut e_content = element.get_content_mut();
                 *e_content = content;
-                debug!("New content set");
+                trace!("New content set");
             }
             {
                 let mut e_header  = element.get_header_mut();
                 *e_header = header;
-                debug!("New header set");
+                trace!("New header set");
             }
         })
         .map_err(|e| StoreError::new(StoreErrorKind::BackendError, Some(Box::new(e))))
@@ -133,11 +133,11 @@ fn create_with_content_and_header(rt: &Runtime,
 fn string_from_raw_src(raw_src: &str) -> String {
     let mut content = String::new();
     if raw_src == "-" {
-        debug!("Reading entry from stdin");
+        trace!("Reading entry from stdin");
         let res = stdin().read_to_string(&mut content);
-        debug!("Read {:?} bytes", res);
+        trace!("Read {:?} bytes", res);
     } else {
-        debug!("Reading entry from file at {:?}", raw_src);
+        trace!("Reading entry from file at {:?}", raw_src);
         OpenOptions::new()
             .read(true)
             .write(false)
