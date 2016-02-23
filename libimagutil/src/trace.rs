@@ -1,6 +1,9 @@
 use std::error::Error;
 use std::io::Write;
-use std::io::stderr;
+
+use term::color::*;
+use term::stderr;
+use term::StderrTerminal;
 
 /// Print an Error type and its cause recursively
 ///
@@ -20,8 +23,9 @@ use std::io::stderr;
 /// Error <NNNN> : <Error description>
 /// ```
 pub fn trace_error(e: &Error) {
-    print_trace_maxdepth(count_error_causes(e), e, ::std::u64::MAX);
-    write!(stderr(), "");
+    let mut term = stderr().unwrap();
+    print_trace_maxdepth(&mut term, count_error_causes(e), e, ::std::u64::MAX);
+    write!(term, "");
 }
 
 /// Print an Error type and its cause recursively, but only `max` levels
@@ -29,9 +33,11 @@ pub fn trace_error(e: &Error) {
 /// Output is the same as for `trace_error()`, though there are only `max` levels printed.
 pub fn trace_error_maxdepth(e: &Error, max: u64) {
     let n = count_error_causes(e);
-    write!(stderr(), "{}/{} Levels of errors will be printed", (if max > n { n } else { max }), n);
-    print_trace_maxdepth(n, e, max);
-    write!(stderr(), "");
+    let mut term = stderr().unwrap();
+    term.fg(BRIGHT_RED);
+    write!(term, "{}/{} Levels of errors will be printed", (if max > n { n } else { max }), n);
+    print_trace_maxdepth(&mut term, n, e, max);
+    write!(term, "");
 }
 
 /// Print an Error type and its cause recursively with the debug!() macro
@@ -45,12 +51,16 @@ pub fn trace_error_dbg(e: &Error) {
 ///
 /// Returns the cause of the last processed error in the recursion, so `None` if all errors where
 /// processed.
-fn print_trace_maxdepth(idx: u64, e: &Error, max: u64) -> Option<&Error> {
+fn print_trace_maxdepth<'a, 'b>(term: &'a mut Box<StderrTerminal>, idx: u64, e: &'b Error, max: u64) -> Option<&'b Error> {
     if e.cause().is_some() && idx > 0 {
-        print_trace_maxdepth(idx - 1, e.cause().unwrap(), max);
-        write!(stderr(), " -- caused:");
+        print_trace_maxdepth(term, idx - 1, e.cause().unwrap(), max);
+        term.fg(WHITE);
+        write!(term, " -- caused:");
     }
-    write!(stderr(), "Error {:>4} : {}", idx, e.description());
+    term.fg(BRIGHT_RED);
+    write!(term, "Error {:>4} :", idx);
+    term.fg(WHITE);
+    write!(term, "{}", e.description());
     e.cause()
 }
 

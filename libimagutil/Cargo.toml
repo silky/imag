@@ -6,4 +6,5 @@ authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 [dependencies]
 log = "0.3.5"
 regex = "0.1.47"
+term = "0.4.4"
 
