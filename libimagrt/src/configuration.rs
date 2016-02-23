@@ -137,10 +137,10 @@ impl Configuration {
             let editor      = cfg.lookup_str("editor").map(String::from);
             let editor_opts = String::from(cfg.lookup_str("editor-opts").unwrap_or(""));
 
-            debug!("Building configuration");
-            debug!("  - verbosity  : {:?}", verbosity);
-            debug!("  - editor     : {:?}", editor);
-            debug!("  - editor-opts: {}", editor_opts);
+            trace!("Building configuration");
+            trace!("  - verbosity  : {:?}", verbosity);
+            trace!("  - editor     : {:?}", editor);
+            trace!("  - editor-opts: {}", editor_opts);
 
             Configuration {
                 verbosity: verbosity,
