@@ -214,6 +214,22 @@ impl Configuration {
         })
     }
 
+    pub fn debug_color(&self) -> Color {
+        self.debug_color.clone()
+    }
+
+    pub fn info_color(&self) -> Color {
+        self.info_color.clone()
+    }
+
+    pub fn warn_color(&self) -> Color {
+        self.warn_color.clone()
+    }
+
+    pub fn error_color(&self) -> Color {
+        self.error_color.clone()
+    }
+
 }
 
 fn build_color(s: &str) -> Option<Color> {
