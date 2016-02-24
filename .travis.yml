@@ -82,8 +82,10 @@ after_success:
       make &&                                                             \
       sudo make install &&                                                \
       cd ../.. &&                                                         \
-      kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo        \
-        target/kcov target/debug/imag-*
+      for target in $(find -name target -type d); do                      \
+        kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo      \
+          $target/kcov $target/debug/*imag*-*                             \
+      done
 
 notifications:
     email:
