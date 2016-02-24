@@ -83,6 +83,7 @@ after_success:
         export PATH=$PATH:$(pwd)/src
         cd ../..
         for target in $(find -name target -type d); do \
+          echo "CALL: kcov for $target/kcov $target/debug/*imag*-*"; \
           kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo \
             $target/kcov $target/debug/*imag*-*; \
         done
