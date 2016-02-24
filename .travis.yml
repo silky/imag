@@ -73,18 +73,20 @@ addons:
 
 after_success:
     - travis-cargo --only stable doc-upload
-    - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz && \
-      tar xzf master.tar.gz &&                                            \
-      mkdir kcov-master/build &&                                          \
-      cd kcov-master/build &&                                             \
-      cmake .. &&                                                         \
-      make &&                                                             \
-      sudo make install &&                                                \
-      cd ../.. &&                                                         \
-      for target in $(find -name target -type d); do                      \
-        kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo      \
-          $target/kcov $target/debug/*imag*-*                             \
-      done
+    - |
+        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+        tar xzf master.tar.gz
+        mkdir kcov-master/build
+        cd kcov-master/build
+        cmake ..
+        make
+        mkdir $HOME/bin
+        make install PREFIX=$HOME/bin
+        cd ../..
+        for target in $(find -name target -type d); do \
+          $HOME/bin/kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo \
+            $target/kcov $target/debug/*imag*-*; \
+        done
 
 notifications:
     email:
