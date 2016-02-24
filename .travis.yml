@@ -80,11 +80,10 @@ after_success:
         cd kcov-master/build
         cmake ..
         make
-        mkdir $HOME/bin
-        make install PREFIX=$HOME/bin
+        export PATH=$PATH:$(pwd)/src
         cd ../..
         for target in $(find -name target -type d); do \
-          $HOME/bin/kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo \
+          kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo \
             $target/kcov $target/debug/*imag*-*; \
         done
 
