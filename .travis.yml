@@ -73,7 +73,7 @@ addons:
 
 after_success:
     - |
-        pip install ghp-import
+      pip install --user ghp-import
         for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
           echo ":: Documenting $d"
           dir=$(dirname $d)
