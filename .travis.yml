@@ -1,97 +1,90 @@
 sudo: false
 language: rust
 rust:
-    - beta
-    - nightly
-    - stable
-
+- beta
+- nightly
+- stable
 matrix:
-    allow_failures:
-        - rust: nightly
-
+  allow_failures:
+  - rust: nightly
 before_install:
-    - |
-      c=$(git diff $(git merge-base master $TRAVIS_COMMIT)..$TRAVIS_COMMIT --name-only | cut -d "/" -f 1 | uniq)
-      if [[ "$c" == "doc" ]]; then
-          echo "Only changes in DOC, exiting 0"
-          exit 0
-      else
-        echo "Changes in other directories than ./doc"
-        echo "continue build..."
-      fi
-
+- |
+  c=$(git diff $(git merge-base master $TRAVIS_COMMIT)..$TRAVIS_COMMIT --name-only | cut -d "/" -f 1 | uniq)
+  if [[ "$c" == "doc" ]]; then
+      echo "Only changes in DOC, exiting 0"
+      exit 0
+  else
+    echo "Changes in other directories than ./doc"
+    echo "continue build..."
+  fi
 before_script:
-    - |
-        pip install 'travis-cargo<0.2' --user &&
-        export PATH=$HOME/.local/bin:$PATH
-
+- |
+  pip install 'travis-cargo<0.2' --user &&
+  export PATH=$HOME/.local/bin:$PATH
 script:
-    - |
-        travis_cargo_run_in() {
-            echo ":: Trying to run cargo in $1"
-            [[ -d "$1" ]] &&
-            cd "$1" &&
-            {
-              travis-cargo build &&
-              travis-cargo test &&
-              travis-cargo bench &&
-              travis-cargo --only stable doc &&
-              cd -
-            } || exit 1
-        }
+- |
+  travis_cargo_run_in() {
+      echo ":: Trying to run cargo in $1"
+      [[ -d "$1" ]] &&
+      cd "$1" &&
+      {
+        travis-cargo build &&
+        travis-cargo test &&
+        travis-cargo bench &&
+        travis-cargo --only stable doc &&
+        cd -
+      } || exit 1
+  }
 
-        run_sh_test() {
-            echo "--- Running test script: $1"
-              bash $1 || { echo "--- Test failed. Exiting"; exit 1; }
-            echo "--- Test script $1 executed successfully"
-        }
+  run_sh_test() {
+      echo "--- Running test script: $1"
+        bash $1 || { echo "--- Test failed. Exiting"; exit 1; }
+      echo "--- Test script $1 executed successfully"
+  }
 
-        echo "<< Changes in ./doc are not build by CI >>"
+  echo "<< Changes in ./doc are not build by CI >>"
 
-        for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
-            echo ":: Working on $d"
-            dir=$(dirname $d)
-            { \
-              echo -e "\n--- Running in $d ---\n" &&    \
-                travis_cargo_run_in $dir &&             \
-                tree -I "*doc*" $dir &&                 \
-                echo "--- Running test scripts ---" &&  \
-                for testsh in $(find $dir -iname "*test.sh"); do
-                  run_sh_test $testsh
-                done && \
-                echo -e "--- Done with test scripts ---\n\n"
-            } || true
-        done
-
+  for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
+      echo ":: Working on $d"
+      dir=$(dirname $d)
+      { \
+        echo -e "\n--- Running in $d ---\n" &&    \
+          travis_cargo_run_in $dir &&             \
+          tree -I "*doc*" $dir &&                 \
+          echo "--- Running test scripts ---" &&  \
+          for testsh in $(find $dir -iname "*test.sh"); do
+            run_sh_test $testsh
+          done && \
+          echo -e "--- Done with test scripts ---\n\n"
+      } || true
+  done
 addons:
-    apt:
-        packages:
-            - libcurl4-openssl-dev
-            - libelf-dev
-            - libdw-dev
-            - tree
-
+  apt:
+    packages:
+    - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+    - tree
 after_success:
-    - |
-        pip install --user ghp-import
-        for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
-          echo ":: Documenting $d"
-          dir=$(dirname $d)
-          pushd $dir
-          { \
-            cargo doc && \
-            echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html && \
-            ghp-import -n target/doc
-          }
-          popd
-        done
-        git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
-
+- |
+  pip install --user ghp-import
+  for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
+    echo ":: Documenting $d"
+    dir=$(dirname $d)
+    pushd $dir
+    { \
+      cargo doc && \
+      echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html && \
+      ghp-import -n target/doc
+    }
+    popd
+  done
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 notifications:
-    email:
-        on_success: never
-
+  email:
+    on_success: never
 env:
-    global:
-        - TRAVIS_CARGO_NIGHTLY_FEATURE=dev
-        - secure=T+Zl+lIt/grYP/h+MUspFSbpDPDQwIlM/9EPTQx8khQbpG2aKTgFT2eajsRBncLdLoi6CygI/3qmVg8q1fWLbImE5jkXbE9GQ6j8jmAKth/9+3d8wmsV3cNP2J5xiZ8vH7Zg1eZl19W8SfDhKYsnljXghYfcmBIXS6udSo7yahiazIYIQ1wrt/YC9TY0jSap/NOIE4brHRy+CwaYQ4k135aIy8zQIYxytfyzAt/cBOEM97wnXZRN8JzSgj3rjaQJtpAFjGiCBPEQHZoBMGdp5zb0EKoyhDUNRh5XMNbHEtZJInQK8GpUHQZcqV2MS7CaK1GzQSvx6khV0ipZoXBA8tunAaqCopf9pdVR77bIJlEoHwsvGW47syzvGR11Axug8Z68qpT/eGDLIyABoLjLAdEumTE9DiIyUsGIBH4wW1TdyEZeH59fy8hI6u0A6uFyBPbkF75n6/O7117n82EQqnPQRFbAcpikkfHbZFFJB7CdeiQ0hmFochQBDfM2YshOn+VKKKAwYwugqL2kC1ofMrTMCWwWiklZJr1UnVVWsU5G6uCQEZRfsNqoSe9foJw7pNxRBzI6hFrpUw2n2AWGi5pzZZc/RxJbpgJr7izziOmoQ6yOK52mNsU66SlBwEXaAXxZXj+L2CBR3SJRQgMKMOQyeSvoIR8r4l4jYyz7z+A=
+  global:
+  - TRAVIS_CARGO_NIGHTLY_FEATURE=dev
+  - secure=T+Zl+lIt/grYP/h+MUspFSbpDPDQwIlM/9EPTQx8khQbpG2aKTgFT2eajsRBncLdLoi6CygI/3qmVg8q1fWLbImE5jkXbE9GQ6j8jmAKth/9+3d8wmsV3cNP2J5xiZ8vH7Zg1eZl19W8SfDhKYsnljXghYfcmBIXS6udSo7yahiazIYIQ1wrt/YC9TY0jSap/NOIE4brHRy+CwaYQ4k135aIy8zQIYxytfyzAt/cBOEM97wnXZRN8JzSgj3rjaQJtpAFjGiCBPEQHZoBMGdp5zb0EKoyhDUNRh5XMNbHEtZJInQK8GpUHQZcqV2MS7CaK1GzQSvx6khV0ipZoXBA8tunAaqCopf9pdVR77bIJlEoHwsvGW47syzvGR11Axug8Z68qpT/eGDLIyABoLjLAdEumTE9DiIyUsGIBH4wW1TdyEZeH59fy8hI6u0A6uFyBPbkF75n6/O7117n82EQqnPQRFbAcpikkfHbZFFJB7CdeiQ0hmFochQBDfM2YshOn+VKKKAwYwugqL2kC1ofMrTMCWwWiklZJr1UnVVWsU5G6uCQEZRfsNqoSe9foJw7pNxRBzI6hFrpUw2n2AWGi5pzZZc/RxJbpgJr7izziOmoQ6yOK52mNsU66SlBwEXaAXxZXj+L2CBR3SJRQgMKMOQyeSvoIR8r4l4jYyz7z+A=
+  - secure: l0EIk+8XRs3kOz951Gco6ew2+bHAiGnF7srPQzSuLGHg2d10CpjkLPkkCA5CiUZCmU/VN/uTWSSAIRpJen1euJHPWTmnRC0xpJAnnkqhXEGg/GPLeUxK73TG9UJ56vwQWrKkKhEMxR3wDwC+oid7bH9rQf5Xg5vFlPqbVkQqCIJ+tcVE84rZPm9LrmH3fNU9BxJ4IoxSO+v/s5eyO/XMBsz3847o90YgnxIZFuybfCSFTuqvaCOQypBQayuUQ29hu3gN2mw3/dyXFmv1CP3lIfkQtog4RG0du+PuSxDsEup4mhf//Oqw1da2uM++o8tSigAJwrEHyR+ZQQaryaZlUlLySBRMXZT3E4JG8y9zkNs1x9TKovDgBq7F8EaaPPtfC2u56tFX0ZDc3dutO4gaDjyiaDTjDvcSNtm0YPZ8L4RO+9ltKfZoGK+gog/hyrxDBYdP0zlFA9KfZOqt1zAnG4stOhkXOv3jt0H8Ll5fWU3BLxDyJjroP9/0jR6MmiOCQB24lz8rrkuKD2jWRl7nRIyUqIbwpFob44afkNoViNHzIvxPRDcY626/+CDrfSWXgkpdkSjCg1QO53adjEd3DUmng46F+4AdfRw+zSdursIaECouAj5XmxHlHwKKKhQtGYSyP6KWMnyMxHJDNagjkqR57z7DsUYNBvbk/A0tEWU=
