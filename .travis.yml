@@ -72,7 +72,20 @@ addons:
             - tree
 
 after_success:
-    - travis-cargo --only stable doc-upload
+    - |
+        for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
+          echo ":: Documenting $d"
+          dir=$(dirname $d)
+          pushd $dir
+          { \
+            cargo doc && \
+            echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html && \
+            pip install ghp-import && \
+            ghp-import -n target/doc && \
+            git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+          }
+          popd
+        done
 
 notifications:
     email:
@@ -81,3 +94,4 @@ notifications:
 env:
     global:
         - TRAVIS_CARGO_NIGHTLY_FEATURE=dev
+        secure: T+Zl+lIt/grYP/h+MUspFSbpDPDQwIlM/9EPTQx8khQbpG2aKTgFT2eajsRBncLdLoi6CygI/3qmVg8q1fWLbImE5jkXbE9GQ6j8jmAKth/9+3d8wmsV3cNP2J5xiZ8vH7Zg1eZl19W8SfDhKYsnljXghYfcmBIXS6udSo7yahiazIYIQ1wrt/YC9TY0jSap/NOIE4brHRy+CwaYQ4k135aIy8zQIYxytfyzAt/cBOEM97wnXZRN8JzSgj3rjaQJtpAFjGiCBPEQHZoBMGdp5zb0EKoyhDUNRh5XMNbHEtZJInQK8GpUHQZcqV2MS7CaK1GzQSvx6khV0ipZoXBA8tunAaqCopf9pdVR77bIJlEoHwsvGW47syzvGR11Axug8Z68qpT/eGDLIyABoLjLAdEumTE9DiIyUsGIBH4wW1TdyEZeH59fy8hI6u0A6uFyBPbkF75n6/O7117n82EQqnPQRFbAcpikkfHbZFFJB7CdeiQ0hmFochQBDfM2YshOn+VKKKAwYwugqL2kC1ofMrTMCWwWiklZJr1UnVVWsU5G6uCQEZRfsNqoSe9foJw7pNxRBzI6hFrpUw2n2AWGi5pzZZc/RxJbpgJr7izziOmoQ6yOK52mNsU66SlBwEXaAXxZXj+L2CBR3SJRQgMKMOQyeSvoIR8r4l4jYyz7z+A=
