@@ -73,7 +73,7 @@ addons:
 
 after_success:
     - |
-      pip install --user ghp-import
+        pip install --user ghp-import
         for d in $(find -name "Cargo.toml" | grep -vE "^./Cargo.toml$"); do
           echo ":: Documenting $d"
           dir=$(dirname $d)
@@ -81,11 +81,11 @@ after_success:
           { \
             cargo doc && \
             echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html && \
-            ghp-import -n target/doc && \
+            ghp-import -n target/doc
           }
           popd
-          git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
         done
+        git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 
 notifications:
     email:
