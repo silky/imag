@@ -7,7 +7,7 @@ authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 clap = "2.1.1"
 itertools = "0.4.7"
 log = "0.3.4"
-regex = "0.1.48"
+regex = "0.1.54"
 toml = "0.1.27"
 
 [dependencies.libimagstore]
