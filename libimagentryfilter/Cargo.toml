@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 
 [dependencies]
-clap = "1.5.5"
+clap = "2.1.1"
 itertools = "0.4.7"
 log = "0.3.4"
 regex = "0.1.48"

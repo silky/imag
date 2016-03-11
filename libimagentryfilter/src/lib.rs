@@ -1,5 +1,6 @@
 #[macro_use] extern crate log;
 
+extern crate clap;
 extern crate itertools;
 extern crate regex;
 extern crate toml;
