@@ -1,0 +1,13 @@
+[package]
+name = "libimaguiutils"
+version = "0.1.0"
+authors = ["Matthias Beyer <mail@beyermatthias.de>"]
+
+[dependencies]
+clap = "2.1.2"
+log = "0.3.5"
+toml = "0.1.27"
+
+[dependencies.libimagstore]
+path = "../libimagstore"
+
