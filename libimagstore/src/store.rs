@@ -408,7 +408,22 @@ impl Store {
 
     /// Move an entry without loading
     pub fn move_by_id(&self, old_id: StoreId, new_id: StoreId) -> Result<()> {
-        unimplemented!()
+        use std::fs::rename;
+
+        let new_id = self.storify_id(new_id);
+        let old_id = self.storify_id(old_id);
+        let hsmap = self.entries.write();
+        if hsmap.is_err() {
+            return Err(StoreError::new(StoreErrorKind::LockPoisoned, None))
+        }
+        let mut hsmap = hsmap.unwrap();
+        if hsmap.contains_key(&old_id) {
+            // We have to unload the entry
+            unimplemented!()
+        } else {
+            rename(old_id, new_id.clone())
+                .map_err(|e| StoreError::new(StoreErrorKind::EntryRenameError, Some(Box::new(e))));
+        }
     }
 
     /// Gets the path where this store is on the disk
