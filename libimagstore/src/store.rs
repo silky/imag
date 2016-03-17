@@ -403,6 +403,15 @@ impl Store {
 
     /// Move an entry
     pub fn save_as(&self, entry: FileLockEntry, new_id: StoreId) -> Result<()> {
+        let new_id = self.storify_id(new_id);
+        let hsmap = self.entries.write();
+        if hsmap.is_err() {
+            return Err(StoreError::new(StoreErrorKind::LockPoisoned, None))
+        }
+        let mut hsmap = hsmap.unwrap();
+        if hsmap.contains_key(&new_id) {
+            return Err(StoreError::new(StoreErrorKind::EntryNotExistent, None))
+        }
         unimplemented!()
     }
 
