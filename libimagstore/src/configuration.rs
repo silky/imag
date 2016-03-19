@@ -184,6 +184,14 @@ pub fn get_post_delete_aspect_names(value: &Option<Value>) -> Vec<String> {
     get_aspect_names_for_aspect_position("post-delete-hook-aspects", value)
 }
 
+pub fn get_pre_move_aspect_names(value: &Option<Value>) -> Vec<String> {
+    get_aspect_names_for_aspect_position("pre-move-hook-aspects", value)
+}
+
+pub fn get_post_move_aspect_names(value: &Option<Value>) -> Vec<String> {
+    get_aspect_names_for_aspect_position("post-move-hook-aspects", value)
+}
+
 #[derive(Debug)]
 pub struct AspectConfig {
     parallel: bool,
