@@ -8,3 +8,8 @@ extern crate libimagnotes;
 
 module_entry_path_mod!("diary", "0.1.0");
 
+pub mod config;
+pub mod diary;
+pub mod error;
+pub mod result;
+
