@@ -4,11 +4,51 @@ use toml::Value;
 
 use libimagrt::runtime::Runtime;
 
-pub fn create_daily_entries(rt: &Runtime) -> bool {
+pub enum DiaryType {
+    Monthly,
+    Weekly,
+    Daily,
+    Hourly,
+    Minutely,
+}
+
+impl From<&str> for DiaryType {
+
+    fn from(s: &str) -> DiaryType {
+        match s {
+            "monthly"   => DiaryType::Monthly,
+            "weekly"    => DiaryType::Weekly,
+            "hourly"    => DiaryType::Hourly,
+            "minutely"  => DiaryType::Minutely,
+            "daily" | _ => DiaryType::Daily,
+        }
+    }
+}
+
+pub fn get_diary_type(rt: &Runtime) -> DiaryType {
     rt.config()
-        .and_then(|config| {
-            let config = config.deref();
-            unimplemented!()
+        .map(|config| {
+            match config.deref() {
+                &Value::Table(ref t) => {
+                    t.get("diary")
+                        .map(|section| {
+                            match section {
+                                &Value::Table(ref t) => t.get("type").map(DiaryType::from),
+                                _ => {
+                                    debug!("Config error, expected 'diary' to have a table");
+                                    debug!("Falling back to daily entries");
+                                    DiaryType::Daily
+                                },
+                            }
+                        })
+                },
+
+                _ => {
+                    debug!("Config error, expected config to be a table");
+                    debug!("Falling back to daily entries");
+                    DiaryType::Daily
+                }
+            }
         })
-        .unwrap_or(true)
+        .unwrap_or(DiaryType::Daily)
 }
