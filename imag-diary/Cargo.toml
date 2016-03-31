@@ -4,3 +4,15 @@ version = "0.1.0"
 authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 
 [dependencies]
+clap = "2.1.1"
+log = "0.3.5"
+
+[dependencies.libimagrt]
+path = "../libimagrt"
+
+[dependencies.libimagdiary]
+path = "../libimagdiary"
+
+[dependencies.libimagutil]
+path = "../libimagutil"
+
