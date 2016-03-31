@@ -78,6 +78,15 @@ impl<'a> Diary<'a> {
             .map_err(|e| DE::new(DEK::CannotCreateNote, Some(Box::new(e))))
     }
 
+    pub fn retrieve(store: &'a Store, name: String) -> Result<Diary<'a>> {
+        Note::retrieve(store, name).map(|note| {
+            Diary {
+                store: store,
+                description: note
+            }
+        })
+        .map_err(|e| DE::new(DEK::StoreReadError, Some(Box::new(e))))
+    }
 }
 
 fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hour: u32, minute: u32) -> String {
