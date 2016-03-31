@@ -1,16 +1,24 @@
 use std::ops::Deref;
 
+use chrono::DateTime;
+use chrono::NaiveDateTime;
+use chrono::offset::local::Local;
+use chrono::Timelike;
+use chrono::Datelike;
 use libimagnotes::note::Note;
 use libimagnotes::note::NoteIterator;
 use libimagstore::store::Store;
 use libimagstore::store::Entry;
 use libimagstore::store::FileLockEntry;
+use libimagstore::storeid::StoreId;
 use libimagrt::runtime::Runtime;
 
-use config::create_daily_entries;
+use config::get_diary_type;
 use error::DiaryError as DE;
 use error::DiaryErrorKind as DEK;
 use result::Result;
+use config::DiaryType;
+use module_path::ModuleEntryPath;
 
 pub type DiaryEntry<'a> = Note<'a>;
 
@@ -43,14 +51,37 @@ impl<'a> Diary<'a> {
             .map_err(|e| DE::new(DEK::StoreReadError, Some(Box::new(e))))
     }
 
-    pub fn new_entry(&self, rt: &Runtime) -> Result<DiaryEntry> {
-        if create_daily_entries(rt) {
-            unimplemented!()
-        } else {
-            unimplemented!()
+    pub fn new_entry(&self, rt: &'a Runtime) -> Result<DiaryEntry<'a>> {
+        let diaryname = self.name().map(String::from);
+        if diaryname.is_none() {
+            return Err(DE::new(DEK::CannotFindDiary, None));
         }
+        let diaryname  = diaryname.unwrap();
+        let diary_type = get_diary_type(rt, &diaryname);
+        let name = {
+            let dt  = Local::now();
+            let ndt = dt.naive_local();
+            let m = ndt.month();
+
+            match diary_type {
+                DiaryType::Monthly  => build_filename(diaryname, ndt, m, 0, 0, 0),
+                DiaryType::Daily    => build_filename(diaryname, ndt, m, ndt.day(), 0, 0),
+                DiaryType::Hourly   => build_filename(diaryname, ndt, m, ndt.day(), ndt.hour(), 0),
+                DiaryType::Minutely => build_filename(diaryname, ndt, m, ndt.day(), ndt.hour(), ndt.minute()),
+            }
+        };
+
+        // TODO: get init-text from configuration. for "Dear Diary,\n" for example.
+
+        // As DiaryEntry == Note, we use the Note::new() functionality here.
+        Note::new(rt.store(), name, String::new())
+            .map_err(|e| DE::new(DEK::CannotCreateNote, Some(Box::new(e))))
     }
 
+}
+
+fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hour: u32, minute: u32) -> String {
+    format!("{}/{}/{}-{}-{}:{}", diaryname, ndt.year(), mon, day, hour, minute)
 }
 
 pub struct DiaryEntryIterator<'a> {
