@@ -11,14 +11,16 @@ pub enum DiaryErrorKind {
     StoreWriteError,
     StoreReadError,
     CannotFindDiary,
+    CannotCreateNote,
     // Nothing here yet
 }
 
 fn note_error_type_as_str(e: &DiaryErrorKind) -> &'static str {
     match e {
-        &DiaryErrorKind::StoreWriteError => "Error writing store",
-        &DiaryErrorKind::StoreReadError  => "Error reading store",
-        &DiaryErrorKind::CannotFindDiary => "Cannot find diary",
+        &DiaryErrorKind::StoreWriteError  => "Error writing store",
+        &DiaryErrorKind::StoreReadError   => "Error reading store",
+        &DiaryErrorKind::CannotFindDiary  => "Cannot find diary",
+        &DiaryErrorKind::CannotCreateNote => "Cannot create Note object for diary entry",
     }
 }
 
