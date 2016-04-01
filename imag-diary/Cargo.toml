@@ -6,6 +6,7 @@ authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 [dependencies]
 clap = "2.1.1"
 log = "0.3.5"
+version = "2.0.1"
 
 [dependencies.libimagrt]
 path = "../libimagrt"

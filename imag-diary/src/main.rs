@@ -1,5 +1,6 @@
 #[macro_use] extern crate log;
 extern crate clap;
+#[macro_use] extern crate version;
 
 extern crate libimagrt;
 extern crate libimagdiary;
