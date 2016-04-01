@@ -5,13 +5,13 @@ use chrono::NaiveDateTime;
 use chrono::offset::local::Local;
 use chrono::Timelike;
 use chrono::Datelike;
-use libimagnotes::note::Note;
-use libimagnotes::note::NoteIterator;
 use libimagstore::store::Store;
 use libimagstore::store::Entry;
 use libimagstore::store::FileLockEntry;
 use libimagstore::storeid::StoreId;
 use libimagrt::runtime::Runtime;
+use libimagnotes::note::Note;
+use libimagnotes::note::NoteIterator;
 
 use config::get_diary_type;
 use error::DiaryError as DE;
@@ -19,6 +19,7 @@ use error::DiaryErrorKind as DEK;
 use result::Result;
 use config::DiaryType;
 use module_path::ModuleEntryPath;
+use iter::DiaryEntryIterator;
 
 pub type DiaryEntry<'a> = Note<'a>;
 
@@ -99,46 +100,7 @@ fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hou
     format!("{}/{}/{}-{}-{}:{}", diaryname, ndt.year(), mon, day, hour, minute)
 }
 
-pub struct DiaryEntryIterator<'a> {
-    name: &'a str,
-    iter: NoteIterator<'a>,
-}
-
-impl<'a> DiaryEntryIterator<'a> {
-
-    pub fn new(diaryname: &'a str, iter: NoteIterator<'a>) -> DiaryEntryIterator<'a> {
-        DiaryEntryIterator {
-            name: diaryname,
-            iter: iter,
-        }
-    }
-
-}
-
-impl<'a> Iterator for DiaryEntryIterator<'a> {
-    type Item = Result<DiaryEntry<'a>>;
-
-    fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            let next = self.iter.next();
-            if next.is_none() {
-                return None;
-            }
-            let next = next.unwrap();
-            if next.is_err() {
-                return Some(Err(DE::new(DEK::StoreReadError, Some(Box::new(next.err().unwrap())))));
-            }
-            let next = next.unwrap();
-
-            if next.deref().is_in_diary(self.name) {
-                return Some(Ok(next))
-            }
-        }
-    }
-
-}
-
-trait IsInDiary {
+pub trait IsInDiary {
 
     fn is_in_diary(&self, name: &str) -> bool;
 
