@@ -208,7 +208,23 @@ impl<'a> Iterator for DiaryYearDayIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        unimplemented!()
+        loop {
+            match self.iter.next() {
+                None           => return None,
+                Some(Err(e))   => return Some(Err(e)),
+                Some(Ok(note)) => {
+                    if note.deref()
+                        .get_location()
+                        .to_str()
+                        .and_then(DiaryId::parse)
+                        .map(|id| id.day() == self.day)
+                        .unwrap_or(false)
+                    {
+                        return Some(Ok(note))
+                    }
+                }
+            }
+        }
     }
 
 }
