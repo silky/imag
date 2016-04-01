@@ -84,23 +84,8 @@ impl<'a> Iterator for DiaryYearIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.year() == self.year)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let year = self.year;
+        filter_iterator(&mut self.iter, |id| id.year() == year)
     }
 
 }
@@ -115,23 +100,8 @@ impl<'a> Iterator for DiaryMonthIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.month() == self.month)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let month = self.month;
+        filter_iterator(&mut self.iter, |id| id.month() == month)
     }
 
 }
@@ -146,23 +116,8 @@ impl<'a> Iterator for DiaryYearMonthIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.month() == self.month)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let month = self.month;
+        filter_iterator(&mut self.iter, |id| id.month() == month)
     }
 
 }
@@ -177,23 +132,8 @@ impl<'a> Iterator for DiaryDayIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.day() == self.day)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let day = self.day;
+        filter_iterator(&mut self.iter, |id| id.day() == day)
     }
 
 }
@@ -208,23 +148,8 @@ impl<'a> Iterator for DiaryYearDayIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.day() == self.day)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let day = self.day;
+        filter_iterator(&mut self.iter, |id| id.day() == day)
     }
 
 }
@@ -239,23 +164,31 @@ impl<'a> Iterator for DiaryYearMonthDayIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
     fn next(&mut self) -> Option<Result<DiaryEntry<'a>>> {
-        loop {
-            match self.iter.next() {
-                None           => return None,
-                Some(Err(e))   => return Some(Err(e)),
-                Some(Ok(note)) => {
-                    if note.deref()
-                        .get_location()
-                        .to_str()
-                        .and_then(DiaryId::parse)
-                        .map(|id| id.day() == self.day)
-                        .unwrap_or(false)
-                    {
-                        return Some(Ok(note))
-                    }
-                }
-            }
-        }
+        let day = self.day;
+        filter_iterator(&mut self.iter, |id| id.day() == day)
     }
 
+}
+
+fn filter_iterator<'a, F, I>(i: &mut I, f: F) -> Option<Result<DiaryEntry<'a>>>
+    where I: Iterator<Item = Result<DiaryEntry<'a>>>,
+          F: Fn(DiaryId) -> bool
+{
+    loop {
+        match i.next() {
+            None           => return None,
+            Some(Err(e))   => return Some(Err(DE::new(DEK::StoreReadError, Some(Box::new(e))))),
+            Some(Ok(note)) => {
+                if note.deref()
+                    .get_location()
+                    .to_str()
+                    .and_then(DiaryId::parse)
+                    .map(|id| f(id))
+                    .unwrap_or(false)
+                {
+                    return Some(Ok(note))
+                }
+            },
+        }
+    }
 }
