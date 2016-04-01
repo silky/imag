@@ -20,6 +20,7 @@ use result::Result;
 use config::DiaryType;
 use module_path::ModuleEntryPath;
 use iter::DiaryEntryIterator;
+use diaryid::DiaryId;
 
 pub type DiaryEntry<'a> = Note<'a>;
 
@@ -97,7 +98,7 @@ impl<'a> Diary<'a> {
 }
 
 fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hour: u32, minute: u32) -> String {
-    format!("{}/{}/{}-{}-{}:{}", diaryname, ndt.year(), mon, day, hour, minute)
+    DiaryId::new(diaryname, ndt.year(), mon, day, hour, minute).into()
 }
 
 pub trait IsInDiary {

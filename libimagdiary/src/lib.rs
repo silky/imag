@@ -11,6 +11,7 @@ module_entry_path_mod!("diary", "0.1.0");
 
 pub mod config;
 pub mod diary;
+pub mod diaryid;
 pub mod error;
 pub mod iter;
 pub mod result;

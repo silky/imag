@@ -3,6 +3,7 @@ use std::ops::Deref;
 use libimagnotes::note::Note;
 use libimagnotes::note::NoteIterator;
 
+use diaryid::DiaryId;
 use diary::IsInDiary;
 use diary::DiaryEntry;
 use error::DiaryError as DE;
