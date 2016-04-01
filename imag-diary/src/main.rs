@@ -8,6 +8,13 @@ extern crate libimagutil;
 
 use std::process::exit;
 
+use libimagdiary::diary::Diary;
+use libimagdiary::error::DiaryError as DE;
+use libimagdiary::error::DiaryErrorKind as DEK;
+use libimagrt::edit::Edit;
+use libimagrt::runtime::Runtime;
+use libimagutil::trace::trace_error;
+
 mod ui;
 
 use ui::build_ui;
@@ -46,7 +53,7 @@ fn main() {
                     debug!("Unknown command"); // More error handling
                 },
             }
-        })
+        });
 }
 
 fn create(rt: &Runtime) {
@@ -59,18 +66,26 @@ fn create(rt: &Runtime) {
 
     let prevent_edit = rt.cli().subcommand_matches("create").unwrap().is_present("no-edit");
 
-    Diary::retrieve(diaryname)
+    let res = Diary::retrieve(rt.store(), diaryname)
         .and_then(|diary| diary.new_entry(rt))
-        .and_then(|entry| {
+        .and_then(|mut entry| {
             if prevent_edit {
                 debug!("Not editing new diary entry");
+                Ok(())
             } else {
                 debug!("Editing new diary entry");
-                entry.edit();
+                entry.edit_content(rt)
+                    .map_err(|e| DE::new(DEK::DiaryEditError, Some(Box::new(e))))
             }
-        })
+        });
 
-    unimplemented!()
+    match res {
+        Err(e) => {
+            trace_error(&e);
+            exit(1);
+        },
+        Ok(_) => info!("Ok"),
+    };
 }
 
 fn delete(rt: &Runtime) {
