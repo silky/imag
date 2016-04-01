@@ -87,6 +87,12 @@ impl<'a> Diary<'a> {
         })
         .map_err(|e| DE::new(DEK::StoreReadError, Some(Box::new(e))))
     }
+
+    /// Delete a diary and all its entries by name
+    pub fn delete(store: &'a Store, name: String) -> Result<()> {
+        unimplemented!()
+    }
+
 }
 
 fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hour: u32, minute: u32) -> String {
