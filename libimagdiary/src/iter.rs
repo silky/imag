@@ -80,6 +80,24 @@ pub struct DiaryYearIterator<'a> {
     year: i32,
 }
 
+impl<'a> DiaryYearIterator<'a> {
+
+    pub fn month(self, month: u32) -> DiaryYearMonthIterator<'a> {
+        DiaryYearMonthIterator {
+            iter: self,
+            month: month
+        }
+    }
+
+    pub fn day(self, day: u32) -> DiaryYearDayIterator<'a> {
+        DiaryYearDayIterator {
+            iter: self,
+            day: day
+        }
+    }
+
+}
+
 impl<'a> Iterator for DiaryYearIterator<'a> {
     type Item = Result<DiaryEntry<'a>>;
 
@@ -110,6 +128,17 @@ impl<'a> Iterator for DiaryMonthIterator<'a> {
 pub struct DiaryYearMonthIterator<'a> {
     iter: DiaryYearIterator<'a>,
     month: u32,
+}
+
+impl<'a> DiaryYearMonthIterator<'a> {
+
+    pub fn day(self, day: u32) -> DiaryYearMonthDayIterator<'a> {
+        DiaryYearMonthDayIterator {
+            iter: self,
+            day: day,
+        }
+    }
+
 }
 
 impl<'a> Iterator for DiaryYearMonthIterator<'a> {
