@@ -96,7 +96,44 @@ fn edit(rt: &Runtime) {
 }
 
 fn list(rt: &Runtime) {
-    unimplemented!()
+    use std::str::FromStr;
+    use std::ops::Deref;
+
+    let diary_name = get_diary_name(rt);
+    if diary_name.is_none() {
+        exit(1);
+    }
+    let diary_name = diary_name.unwrap();
+
+    Diary::all_entries(rt.store(), &diary_name[..])
+        .map(|iter| {
+            let scmd  = rt.cli().subcommand_matches("list").unwrap();
+            let iter = match scmd.value_of("year").and_then(|s| FromStr::from_str(s).ok()) {
+                Some(year) => iter.year(year),
+                None       => iter,
+            };
+
+            let iter = match scmd.value_of("month").and_then(|s| FromStr::from_str(s).ok()) {
+                Some(month) => iter.month(month),
+                None        => iter,
+            };
+
+            let iter = match scmd.value_of("day").and_then(|s| FromStr::from_str(s).ok()) {
+                Some(day) => iter.day(day),
+                None      => iter,
+            };
+
+            // TODO implement fancy listing using libimagentrylist
+            info!("Note: Fancy listing functionality is not yet implemented!");
+            for entry in iter {
+                match entry.map(|e| e.deref().get_location().to_str().map(String::from)) {
+                    Err(e) => trace_error(&e),
+                    Ok(None) => warn!("Could not convert location to path"),
+                    Ok(Some(location)) => println!("{}", location),
+                }
+            }
+        })
+        .map_err(|e| trace_error(&e));
 }
 
 fn diary(rt: &Runtime) {

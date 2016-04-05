@@ -32,7 +32,30 @@ pub fn build_ui<'a>(app: App<'a, 'a>) -> App<'a, 'a> {
 
         .subcommand(SubCommand::with_name("list")
                    .about("List diary entries")
-                   .version("0.1"))
+                   .version("0.1")
+
+                   .arg(Arg::with_name("year")
+                        .long("year")
+                        .short("y")
+                        .takes_value(true)
+                        .required(false)
+                        .help("List for this Year"))
+
+                   .arg(Arg::with_name("month")
+                        .long("month")
+                        .short("m")
+                        .takes_value(true)
+                        .required(false)
+                        .help("List for this Month"))
+
+                   .arg(Arg::with_name("day")
+                        .long("day")
+                        .short("d")
+                        .takes_value(true)
+                        .required(false)
+                        .help("List for this Day"))
+
+                   )
 
         .subcommand(SubCommand::with_name("diary")
                    .about("Diary commands")
