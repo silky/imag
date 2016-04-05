@@ -119,5 +119,12 @@ fn get_diary_name_and_type_from_tab(v: &Value) -> Option<(DiaryName, DiaryType)>
 }
 
 pub fn get_default_diary_name(rt: &Runtime) -> Option<String> {
-    unimplemented!()
+    rt.config()
+        .and_then(|config| config.deref().lookup("diary.default"))
+        .and_then(|value| {
+            match value {
+                &Value::String(ref s) => Some(s.clone()),
+                _                     => None,
+            }
+        })
 }
