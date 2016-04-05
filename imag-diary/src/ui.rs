@@ -10,7 +10,7 @@ pub fn build_ui<'a>(app: App<'a, 'a>) -> App<'a, 'a> {
             .help("Use other than default diary"))
 
         .subcommand(SubCommand::with_name("create")
-                   .about("Create a diary entry")
+                   .about("Create a diary entry (default command)")
                    .version("0.1")
                    .arg(Arg::with_name("no-edit")
                         .long("no-edit")

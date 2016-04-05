@@ -39,21 +39,20 @@ fn main() {
     debug!("I already set up the Runtime object and build the commandline interface parser.");
     debug!("Lets get rollin' ...");
 
-    rt.cli()
-        .subcommand_name()
-        .map(|name| {
-            debug!("Call {}", name);
-            match name {
-                "create" => create(&rt),
-                // "delete" => delete(&rt),
-                // "edit" => edit(&rt),
-                "list" => list(&rt),
-                "diary" => diary(&rt),
-                _        => {
-                    debug!("Unknown command"); // More error handling
-                },
-            }
-        });
+    match rt.cli().subcommand_name() {
+        Some("create") => create(&rt),
+        Some("delete") => delete(&rt),
+        Some("diary")  => diary(&rt),
+        Some("edit")   => edit(&rt),
+        Some("list")   => list(&rt),
+        None           => {
+            info!("No command, calling 'create'");
+            create(&rt);
+        },
+        _ => {
+            warn!("Unknown command"); // More error handling
+        },
+    }
 }
 
 fn create(rt: &Runtime) {
