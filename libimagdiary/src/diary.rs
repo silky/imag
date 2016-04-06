@@ -96,6 +96,29 @@ impl<'a> Diary<'a> {
         unimplemented!()
     }
 
+    /// Give the names of all diaries
+    pub fn diaries(store: &'a Store) -> Result<Vec<String>> {
+        Note::all_notes(store)
+            .map(|iter| {
+                iter.filter(|fle| {
+                    match fle {
+                        &Ok(ref fle) => fle.get_location().ends_with("description"),
+                        &Err(_)  => false,
+                    }
+                })
+                .filter_map(|x| x.ok())
+                .map(|entry| {
+                    entry.get_location()
+                        .parent()
+                        .and_then(|p| p.to_str())
+                        .unwrap_or("<unparsable name>")
+                })
+                .map(String::from)
+                .collect()
+            })
+            .map_err(|e| DE::new(DEK::StoreReadError, Some(Box::new(e))))
+    }
+
 }
 
 impl<'a> Edit for Diary<'a> {
