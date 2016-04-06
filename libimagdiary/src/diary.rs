@@ -9,6 +9,7 @@ use libimagstore::store::Store;
 use libimagstore::store::Entry;
 use libimagstore::store::FileLockEntry;
 use libimagstore::storeid::StoreId;
+use libimagrt::edit::{Edit, EditResult};
 use libimagrt::runtime::Runtime;
 use libimagnotes::note::Note;
 use libimagnotes::note::NoteIterator;
@@ -96,6 +97,15 @@ impl<'a> Diary<'a> {
     }
 
 }
+
+impl<'a> Edit for Diary<'a> {
+
+    fn edit_content(&mut self, rt: &Runtime) -> EditResult<()> {
+        self.description.edit_content(rt)
+    }
+
+}
+
 
 fn build_filename(diaryname: String, ndt: NaiveDateTime, mon: u32, day: u32, hour: u32, minute: u32) -> String {
     DiaryId::new(diaryname, ndt.year(), mon, day, hour, minute).into()
