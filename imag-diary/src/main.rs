@@ -8,6 +8,8 @@ extern crate libimagutil;
 
 use std::process::exit;
 
+use clap::ArgMatches;
+
 use libimagdiary::diary::Diary;
 use libimagdiary::error::DiaryError as DE;
 use libimagdiary::error::DiaryErrorKind as DEK;
@@ -137,9 +139,76 @@ fn list(rt: &Runtime) {
 }
 
 fn diary(rt: &Runtime) {
+    let cmd = rt.cli().subcommand_matches("diary").unwrap();
+
+    match cmd.subcommand_name() {
+        Some("create") => diary_create(rt, &cmd),
+        Some("delete") => diary_delete(rt, &cmd),
+        Some("edit")   => diary_edit(rt, &cmd),
+        Some("list")   => diary_list(rt, &cmd),
+        Some(other)    => {
+            // cannot happen due to clap
+            unreachable!()
+        },
+        None => {
+            warn!("No diary subcommand, falling back to 'list'");
+            diary_list(rt, &cmd)
+        },
+    }
+}
+
+fn diary_create(rt: &Runtime, cmd: &ArgMatches) {
+    let name = cmd.subcommand_matches("create").unwrap().value_of("name");
+    if name.is_none() {
+        warn!("No diary name");
+        exit(1);
+    }
+    let name = String::from(name.unwrap());
+
+    Diary::new(rt.store(), name.clone(), String::from(""))
+        .map(|diary| {
+            debug!("Diary created: {:?}", name);
+            info!("Ok");
+        })
+        .map_err(|e| {
+            trace_error(&e);
+            warn!("Error");
+        });
+}
+
+fn diary_delete(rt: &Runtime, cmd: &ArgMatches) {
+    let name = cmd.subcommand_matches("delete").unwrap().value_of("name");
+    if name.is_none() {
+        warn!("No diary name");
+        exit(1);
+    }
+    let name = String::from(name.unwrap());
+
+    Diary::delete(rt.store(), name.clone())
+        .map(|diary| {
+            debug!("Diary deleted: {:?}", name);
+            info!("Ok");
+        })
+        .map_err(|e| {
+            trace_error(&e);
+            warn!("Error");
+        });
+}
+
+fn diary_edit(rt: &Runtime, cmd: &ArgMatches) {
+    let name = cmd.subcommand_matches("edit").unwrap().value_of("name");
+    if name.is_none() {
+        warn!("No diary name");
+        exit(1);
+    }
+    let name = name.unwrap();
+
     unimplemented!()
 }
 
+fn diary_list(rt: &Runtime, cmd: &ArgMatches) {
+    unimplemented!()
+}
 
 fn get_diary_name(rt: &Runtime) -> Option<String> {
     use libimagdiary::config::get_default_diary_name;
