@@ -1,140 +1,141 @@
+/// External linking is a complex implementation to be able to serve a clean and easy-to-use
+/// interface.
+///
+/// Internally, there are no such things as "external links" (plural). Each Entry in the store can
+/// only have _one_ external link.
+///
+/// This library does the following therefor: It allows you to have several external links with one
+/// entry, which are internally one file in the store for each link, linked with "internal
+/// linking".
+///
+/// This helps us greatly with deduplication of URLs.
+///
+
 use std::convert::Into;
+use std::ops::Deref;
 
 use libimagstore::store::Entry;
 use libimagstore::store::EntryHeader;
+use libimagstore::store::FileLockEntry;
+use libimagstore::store::Store;
+use libimagstore::storeid::StoreId;
 
-use error::{LinkError, LinkErrorKind};
+use error::LinkError as LE;
+use error::LinkErrorKind as LEK;
 use result::Result;
+use internal::InternalLinker;
 
 use toml::Value;
 use toml::Table;
 use url::Url;
 
-#[derive(PartialOrd, Ord, Eq, PartialEq, Clone, Debug)]
-pub struct Link {
-    link: String
+/// "Link" Type, just an abstraction over FileLockEntry to have some convenience internally.
+struct Link<'a> {
+    link: FileLockEntry<'a>
 }
 
-impl Link {
+impl<'a> Link<'a> {
 
-    pub fn new(s: String) -> Link {
-        Link { link: s }
+    pub fn new(fle: FileLockEntry<'a>) -> Link<'a> {
+        Link { link: fle }
     }
 
-    pub fn is_valid(&self) -> bool {
-        Url::parse(&self.link[..]).is_ok()
+    /// For interal use only. Load an Link from a store id, if this is actually a Link
+    fn retrieve(store: &'a Store, id: StoreId) -> Result<Option<Link<'a>>> {
+        store.retrieve(id)
+            .map(|fle| {
+                if let Some(_) = Link::get_link_uri_from_filelockentry(&fle) {
+                    Some(Link {
+                        link: fle
+                    })
+                } else {
+                    None
+                }
+            })
+            .map_err(|e| LE::new(LEK::StoreReadError, Some(Box::new(e))))
     }
 
-}
-
-#[derive(Eq, PartialEq, Clone, Debug)]
-pub struct Links {
-    links: Vec<Link>,
-}
-
-impl Links {
-
-    pub fn new(s: Vec<Link>) -> Links {
-        Links { links: s }
+    /// Get a link Url object from a FileLockEntry, ignore errors.
+    fn get_link_uri_from_filelockentry(file: &FileLockEntry<'a>) -> Option<Url> {
+        file.deref()
+            .get_header()
+            .read("imag.content.uri")
+            .ok()
+            .and_then(|opt| {
+                match opt {
+                    Some(Value::String(s)) => Url::parse(&s[..]).ok(),
+                    _ => None
+                }
+            })
     }
 
-    pub fn add(&mut self, l: Link) {
-        self.links.push(l);
-    }
+    pub fn get_url(&self) -> Result<Option<Url>> {
+        let opt = self.link
+            .deref()
+            .get_header()
+            .read("imag.content.uri");
 
-    pub fn remove(&mut self, l: Link) {
-        self.links.retain(|link| l != link.clone());
-    }
-
-    pub fn all_valid(&self) -> bool {
-        self.links.iter().all(|l| l.is_valid())
-    }
-
-}
-
-impl Into<String> for Link {
-
-    fn into(self) -> String {
-        self.link
-    }
-
-}
-
-impl Into<Vec<Link>> for Links {
-
-    fn into(self) -> Vec<Link> {
-        self.links
-    }
-
-}
-
-pub trait ExternalLinker {
-
-    /// get the external link from the implementor object
-    fn get_external_link(&self) -> Result<Option<Link>>;
-
-    /// set the external link for the implementor object and return the current link from the entry,
-    /// if any.
-    fn set_external_link(&mut self, l: Link) -> Result<Option<Link>>;
-}
-
-impl ExternalLinker for EntryHeader {
-
-    fn get_external_link(&self) -> Result<Option<Link>> {
-        let uri = self.read("imag.content.uri");
-
-        if uri.is_err() {
-            let kind = LinkErrorKind::EntryHeaderReadError;
-            let lerr = LinkError::new(kind, Some(Box::new(uri.err().unwrap())));
-            return Err(lerr);
-        }
-        let uri = uri.unwrap();
-
-        match uri {
-            Some(Value::String(s)) => Ok(Some(Link::new(s))),
-            _ => Err(LinkError::new(LinkErrorKind::ExistingLinkTypeWrong, None)),
-        }
-    }
-
-    /// Set an external link in the header
-    ///
-    /// Return the previous set link if there was any
-    fn set_external_link(&mut self, l: Link) -> Result<Option<Link>> {
-        if !l.is_valid() {
-            return Err(LinkError::new(LinkErrorKind::InvalidUri, None));
-        }
-
-        let old_link = self.set("imag.content.uri", Value::String(l.into()));
-
-        if old_link.is_err() {
-            let kind = LinkErrorKind::EntryHeaderWriteError;
-            let lerr = LinkError::new(kind, Some(Box::new(old_link.err().unwrap())));
-            return Err(lerr);
-        }
-        let old_link = old_link.unwrap();
-
-        if old_link.is_none() {
-            return Ok(None);
-        }
-
-        match old_link.unwrap() {
-            Value::String(s) => Ok(Some(Link::new(s))),
-
-            // We don't do anything in this case and be glad we corrected the type error with this set()
-            _ => Ok(None),
+        match opt {
+            Ok(Some(Value::String(s))) => {
+                Url::parse(&s[..])
+                     .map(|s| Some(s))
+                     .map_err(|e| LE::new(LEK::EntryHeaderReadError, Some(Box::new(e))))
+            },
+            Ok(None) => Ok(None),
+            _ => Err(LE::new(LEK::EntryHeaderReadError, None))
         }
     }
 
 }
 
+pub trait ExternalLinker : InternalLinker {
+
+    /// Get the external links from the implementor object
+    fn get_external_links(&self) -> Result<Vec<Url>>;
+
+    /// Set the external links for the implementor object
+    fn set_external_links(&mut self, links: Vec<Url>) -> Result<Vec<Url>>;
+
+    /// Add an external link to the implementor object
+    fn add_external_link(&mut self, link: Url) -> Result<()>;
+
+    /// Remove an external link from the implementor object
+    fn remove_external_link(&mut self, link: Url) -> Result<()>;
+
+}
+
+/// Implement ExternalLinker for Entry, hiding the fact that there is no such thing as an external
+/// link in an entry, but internal links to other entries which serve as external links, as one
+/// entry in the store can only have one external link.
 impl ExternalLinker for Entry {
 
-    fn get_external_link(&self) -> Result<Option<Link>> {
-        self.get_header().get_external_link()
+    /// Get the external links from the implementor object
+    fn get_external_links(&self) -> Result<Vec<Url>> {
+        // Iterate through all internal links and filter for FileLockEntries which live in
+        // /link/external/<SHA> -> load these files and get the external link from their headers,
+        // put them into the return vector.
+        unimplemented!()
     }
 
-    fn set_external_link(&mut self, l: Link) -> Result<Option<Link>> {
-        self.get_header_mut().set_external_link(l)
+    /// Set the external links for the implementor object
+    fn set_external_links(&mut self, links: Vec<Url>) -> Result<Vec<Url>> {
+        // Take all the links, generate a SHA sum out of each one, filter out the already existing
+        // store entries and store the other URIs in the header of one FileLockEntry each, in
+        // the path /link/external/<SHA of the URL>
+        unimplemented!()
+    }
+
+    /// Add an external link to the implementor object
+    fn add_external_link(&mut self, link: Url) -> Result<()> {
+        // get external links, add this one, save them
+        unimplemented!()
+    }
+
+    /// Remove an external link from the implementor object
+    fn remove_external_link(&mut self, link: Url) -> Result<()> {
+        // get external links, remove this one, save them
+        unimplemented!()
     }
 
 }
+
