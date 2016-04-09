@@ -145,7 +145,39 @@ impl ExternalLinker for Entry {
         // Take all the links, generate a SHA sum out of each one, filter out the already existing
         // store entries and store the other URIs in the header of one FileLockEntry each, in
         // the path /link/external/<SHA of the URL>
-        unimplemented!()
+
+        struct LinkHash {
+            pub hash: Digest,
+            pub file: Option<FileLockEntry>,
+        }
+
+        let mut vec = vec![];
+
+        for link in links {
+            let hash     = hash::hash(link.serialize().as_bytes()),
+            let file_id  = hash_to_storeid(hash);
+            let mut file = store.retrieve(file_id).ok();
+            if file.is_none() {
+                store.create(file_id)
+                    .and_then(|file| {
+                        let mut hdr = file.deref_mut().get_header_mut();
+
+                        match hdr.set("imag.content", Value::Table(BTreeMap::new())) {
+                            Ok(_) => hdr.set("imag.content.uri", Value::String(link.serialize())),
+                            Err(e) => Err(e),
+                        }
+                        .map_err(|e| LE::new(LEK::StoreWriteError, Some(Box::new(e))))
+                    })
+            };
+
+            vec.push(file_id);
+        }
+
+        // generate entries
+        links.into_iter()
+            .map(|link| (link, hash::hash(link.serialize().as_bytes())))
+            .filter(|(_, hash)| store.retrieve(hash_to_storeid(hash)).is_ok())
+
     }
 
     /// Add an external link to the implementor object
