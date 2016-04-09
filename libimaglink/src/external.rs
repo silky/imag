@@ -91,7 +91,7 @@ impl<'a> Link<'a> {
 pub trait ExternalLinker : InternalLinker {
 
     /// Get the external links from the implementor object
-    fn get_external_links(&self) -> Result<Vec<Url>>;
+    fn get_external_links(&self, store: &Store) -> Result<Vec<Url>>;
 
     /// Set the external links for the implementor object
     fn set_external_links(&mut self, links: Vec<Url>) -> Result<Vec<Url>>;
@@ -104,17 +104,40 @@ pub trait ExternalLinker : InternalLinker {
 
 }
 
+/// Check whether the StoreId starts with `/link/external/`
+fn is_link_store_id(id: &StoreId) -> bool {
+    id.starts_with("/link/external/")
+}
+
+fn get_external_link_from_file(entry: &FileLockEntry) -> Result<Url> {
+    Link::get_link_uri_from_filelockentry(entry) // TODO: Do not hide error by using this function
+        .ok_or(LE::new(LEK::StoreReadError, None))
+}
+
 /// Implement ExternalLinker for Entry, hiding the fact that there is no such thing as an external
 /// link in an entry, but internal links to other entries which serve as external links, as one
 /// entry in the store can only have one external link.
 impl ExternalLinker for Entry {
 
     /// Get the external links from the implementor object
-    fn get_external_links(&self) -> Result<Vec<Url>> {
+    fn get_external_links(&self, store: &Store) -> Result<Vec<Url>> {
         // Iterate through all internal links and filter for FileLockEntries which live in
         // /link/external/<SHA> -> load these files and get the external link from their headers,
         // put them into the return vector.
-        unimplemented!()
+        self.get_internal_links()
+            .map(|vect| {
+                vect.into_iter()
+                    .filter(is_link_store_id)
+                    .map(|id| {
+                        match store.retrieve(id) {
+                            Ok(f) => get_external_link_from_file(&f),
+                            Err(e) => Err(LE::new(LEK::StoreReadError, Some(Box::new(e)))),
+                        }
+                    })
+                    .filter_map(|x| x.ok()) // TODO: Do not ignore error here
+                    .collect()
+            })
+            .map_err(|e| LE::new(LEK::StoreReadError, Some(Box::new(e))))
     }
 
     /// Set the external links for the implementor object
